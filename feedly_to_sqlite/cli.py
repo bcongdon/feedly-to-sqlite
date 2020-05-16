@@ -32,12 +32,12 @@ def auth(auth, developer_token):
         auth_data = json.load(open(auth))
 
     if developer_token:
-        auth_data['developer_token'] = developer_token
+        auth_data["developer_token"] = developer_token
     else:
         click.echo(
             "Visit the following link and find your personal developer token: https://feedly.com/v3/auth/dev"
         )
-        auth_data['developer_token'] = click.prompt("feedly developer token")
+        auth_data["developer_token"] = click.prompt("feedly developer token")
 
     open(auth, "w").write(json.dumps(auth_data, indent=4) + "\n")
     click.echo()
@@ -51,9 +51,17 @@ def auth(auth, developer_token):
     click.echo()
 
 
-COLLECTION_KEYS = ['label', 'created', 'id']
-FEED_KEYS = ['id', 'topics', 'title', 'website',
-             'updated', 'language', 'state', 'description']
+COLLECTION_KEYS = ["label", "created", "id"]
+FEED_KEYS = [
+    "id",
+    "topics",
+    "title",
+    "website",
+    "updated",
+    "language",
+    "state",
+    "description",
+]
 
 
 @cli.command()
@@ -84,22 +92,19 @@ def subscriptions(db_path, auth):
     click.echo("Downloading subscriptions")
     r = requests.get(
         FEEDLY_API_URL + "/v3/collections",
-        headers={
-            'Authorization': 'Bearer {}'.format(token)
-        }
+        headers={"Authorization": "Bearer {}".format(token)},
     )
     r.raise_for_status()
 
     collections = r.json()
     for coll in collections:
-        feeds = coll['feeds']
-        coll_id = coll['id']
+        feeds = coll["feeds"]
+        coll_id = coll["id"]
         coll_data = {k: coll.get(k) for k in COLLECTION_KEYS}
         db["collections"].upsert(coll_data, pk="id")
         for f in feeds:
             feed_data = {k: f.get(k) for k in FEED_KEYS}
-            db['collections'].update(coll_id).m2m(
-                db.table('feeds', pk='id'), feed_data)
+            db["collections"].update(coll_id).m2m(db.table("feeds", pk="id"), feed_data)
 
 
 if __name__ == "__main__":
